@@ -3,64 +3,368 @@ openapi: 3.0.0
 servers:
   - description: SwaggerHub API Auto Mocking
     url: https://virtserver.swaggerhub.com/MOAZELSAYED002/matterwise/1.0.0
-  - url: '{protocol}://localhost:{port}/workspaces/{workspace_id}'
+  - url: "{protocol}://localhost:{port}/workspaces/{workspace_id}"
     variables:
-        protocol:
-          default: http
-          enum:
-            - http
-            - https
-        port:
-          enum:
-            - '443'
-            - '8443'
-          default: '8443'
-        workspace_id:
-          default: '1'
-          description: workspace id
-          
-  - description: SwaggerHub API Auto Mocking
-    url: https://virtserver.swaggerhub.com/MOAZELSAYED002/mattermost/1.0.0
+      protocol:
+        default: http
+        enum:
+          - http
+          - https
+      port:
+        enum:
+          - "443"
+          - "8443"
+        default: "8443"
+      workspace_id:
+        default: "1"
+        description: workspace id
+
 info:
   description: matterwise API
   version: "1.0.0"
-  title: matterwise
-   
+  title: matterwise API
+
 tags:
-  - name: users
-    description: Users endpoints
-  - name: developers
-    description: Operations available to regular developers
+  - name: Users
+    description: Operations about users
+  - name: Channels
+    description: Operations about channels
+  - name: Auth
+    description: Auth-related operations.
 
 paths:
-  /users/{id}:
+  /channels:
     get:
       tags:
-        - Users
-      summary: Gets a user by ID.
-      description: >
-        A detailed description of the operation.
-        Use markdown for rich text representation,
-        such as **bold**, *italic*, and [links](https://swagger.io).
-      operationId: getUserById
-      parameters:
-        - name: id
-          in: path
-          description: User ID
-          required: true
-          schema:
-            type: integer
-            format: int64
+        - Channels
+      summary: Get channels within a workspace
       responses:
-        '200':
-          description: Successful operation
+        "200":
+          description: A list of channels
           content:
             application/json:
               schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Channel"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      tags:
+        - Channels
+      summary: Create a new channel
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Channel"
+      responses:
+        "201":
+          description: Channel created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Channel"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /channels/{channel_id}:
+    put:
+      tags:
+        - Channels
+      summary: Update a channel by ID
+      parameters:
+        - name: channel_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Channel"
+      responses:
+        "200":
+          description: Channel updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Channel"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+    delete:
+      tags:
+        - Channels
+      summary: Delete a channel by ID
+      parameters:
+        - name: channel_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Channel deleted
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /channels/{channel_id}/users:
+    get:
+      tags:
+        - Channels
+      summary: Get users of a channel
+      parameters:
+        - name: channel_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: A list of users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UsersForUsers'
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /channels/{channel_id}/messages:
+    get:
+      tags:
+        - Channels
+      summary: Get messages within a channel with cursor-based pagination
+      parameters:
+        - name: channel_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            default: "0"
+      responses:
+        "200":
+          description: A list of messages
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  messages:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Message"
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: string
+                        format: uri
+                      next_cursor:
+                        type: string
+                        format: uri
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /users/me: 
+    get:
+      tags: 
+      - Users
+      # parameters: 
+      #   - name: auth
+      #     in: header
+      #     description: an authorization header
+      #     required: true
+      #     schema:
+      #       type: string
+      summary: Get logged user's info 
+      responses: 
+        "200": 
+          description: user's info 
+          content:
+            application/json: 
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: authentication error
+          content:
+            application/json: 
+              schema:
+                $ref: "#/components/schemas/Unauthorized"
+    post: 
+      tags: 
+        - Users
+
+      # parameters: 
+      #   - name: auth
+      #     in: header
+      #     description: an authorization header
+      #     required: true
+      #     schema:
+      #       type: string
+      
+      requestBody:
+        content:
+          application/json: 
+            schema:
+              $ref: '#/components/schemas/User'
+      summary: update user's data
+      responses:
+        "200": 
+          description: successful update 
+          content:
+            application/json: 
+              schema:
                 $ref: '#/components/schemas/User'
-      externalDocs:
-        description: Learn more about user operations provided by this API.
-        url: http://api.example.com/docs/user-operations/
+        
+        "422": 
+          description: validation error
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/User'
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      tags: 
+        - Users
+      summary: delete's user data 
+      responses:
+        "200": 
+          $ref: '#/components/responses/ok'
+        "401": 
+          description: user is unidentified 
+          content: 
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+  /user/verify/{code}: 
+    post:
+      tags: 
+        - Users
+        - Auth
+      summary: verifiying the code sent to the user's email 
+      parameters: 
+        - name: code
+          in: path 
+          description: the code in the email
+          required: true
+          schema:
+            type: string 
+            
+      responses:
+        "200": 
+          $ref: '#/components/responses/ok'
+        
+        "401": 
+          $ref: '#/components/responses/Unauthorized'
+  /user/{id}: 
+    get: 
+      tags: 
+        - Users
+        
+      summary: get user's info by id
+      parameters: 
+        - name: id
+          in: path 
+          description: user's id 
+          required: true
+          schema:
+            type: string 
+            
+      responses:
+        "200":
+          description: user's info
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/UsersForUsers'
+                
+        "404": 
+          $ref: '#/components/responses/NotFound'
+        
+        "401": 
+          $ref: '#/components/responses/Unauthorized'
+  /login: 
+    post: 
+      tags: 
+        - Users
+        - Auth
+      summary: user's login 
+      requestBody:
+        content:
+          application/json: 
+            schema:
+              $ref: '#/components/schemas/UserAuth'
+      
+      responses:
+        "200": 
+          $ref: '#/components/responses/ok'
+        
+        "422": 
+          description: user's loggin credentioals didn't pass the validation step 
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/UserAuth'
+                
+        
+        "401": 
+          $ref: '#/components/responses/Unauthorized'
+          
+        "404": 
+          $ref: '#/components/responses/NotFound'
+  /signup: 
+    post: 
+      tags: 
+        - Users
+        - Auth
+      summary: user's signup 
+      requestBody:
+        content:
+          application/json: 
+            schema:
+              $ref: '#/components/schemas/UserAuth'
+      
+      responses:
+        "200": 
+          $ref: '#/components/responses/ok'
+        
+        "422": 
+          description: user's loggin credentioals didn't pass the validation step 
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/UserAuth'
+                
+        
+        "401": 
+          $ref: '#/components/responses/Unauthorized'
+          
+        "404": 
+          $ref: '#/components/responses/NotFound'
+          
+                
         
 components:
   schemas:
@@ -111,7 +415,7 @@ components:
         - password
         - role_id
         - status_message
-      example: 
+      example:
         id: "123e4567-e89b-12d3-a456-426614174001"
         username: "john_doe"
         email: "john.doe@example.com"
@@ -123,7 +427,62 @@ components:
         online_status: "online"
         created_at: "2023-01-01"
         updated_at: "2023-01-02"
-       
+        
+    UserAuth: 
+      type: object 
+      properties:
+        username: 
+          type: string 
+        email: 
+          type: string 
+          format: email 
+        
+        password: 
+          type: string 
+          format: password
+          
+      required: 
+        - username
+        - password
+        - email 
+        
+      example: 
+        username: "john_doe"
+        email: "john.doe@example.com"
+        password: "hashed_password_here"
+
+    UsersForUsers:
+      type: object 
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        role_id:
+          type: string
+          format: uuid
+        bio:
+          type: string
+        avatar_url:
+          type: string
+          format: uri
+        status_message:
+          type: string
+        online_status:
+          type: string
+          enum:
+            - online
+            - away
+            - offline
+        created_at:
+          type: string
+          format: date
+        
+      
     Channel:
       type: object
       properties:
@@ -163,7 +522,7 @@ components:
         - type
         - creator_id
         - workspace_id
-      example: 
+      example:
         id: "234e5678-e89b-12d3-a456-426614174002"
         name: "general"
         description: "General discussion"
@@ -172,7 +531,7 @@ components:
         workspace_id: "765e4321-e89b-12d3-a456-426614174000"
         created_at: "2023-02-01"
         updated_at: "2023-02-02"
-    
+
     Workspace:
       type: object
       required:
@@ -180,17 +539,17 @@ components:
         - creator_id
         - name
       properties:
-        id: 
+        id:
           type: string
           format: uuid
           readOnly: true
-        name: 
+        name:
           type: string
         creator_id:
           type: string
           format: uuid
           readOnly: true
-      example: 
+      example:
         id: "345e6789-e89b-12d3-a456-426614174003"
         name: "MyWorkspace"
         creator_id: "765e4321-e89b-12d3-a456-426614174000"
@@ -244,13 +603,14 @@ components:
           type: string
           format: date
           readOnly: true
+
       required:
         - content
         - type
         - sender_id
         - channel_id
         - workspace_id
-      example: 
+      example:
         id: "456e7890-e89b-12d3-a456-426614174004"
         content: "Hello, world!"
         type: "text"
@@ -262,7 +622,7 @@ components:
         workspace_id: "765e4321-e89b-12d3-a456-426614174000"
         created_at: "2023-03-01"
         updated_at: "2023-03-02"
- 
+
     File:
       type: object
       properties:
@@ -307,7 +667,7 @@ components:
         message_id: "654e7890-e89b-12d3-a456-426614174004"
         uploaded_by: "876e5432-e89b-12d3-a456-426614174001"
         upload_at: "2023-04-01"
-        
+
     Thread:
       type: object
       properties:
@@ -348,11 +708,11 @@ components:
         - parent_message_id
         - messages
         - users
-      example: 
+      example:
         id: "678e9012-e89b-12d3-a456-426614174007"
         parent_message_id: "654e7890-e89b-12d3-a456-426614174004"
         messages:
-          - $ref: "#/components/schemas/Message"  # Placeholder for message example
+          - $ref: "#/components/schemas/Message" # Placeholder for message example
         users:
           - id: "876e5432-e89b-12d3-a456-426614174001"
             username: "user1"
@@ -364,8 +724,90 @@ components:
       type: array
       items:
         $ref: "#/components/schemas/Thread"
-      example: 
+      example:
         thread_list:
-          - $ref: "#/components/schemas/Thread"  # Placeholder for thread example
-          - $ref: "#/components/schemas/Thread"  # Placeholder for thread example
- # Add more thread examples as needed
+          - $ref: "#/components/schemas/Thread"
+          - $ref: "#/components/schemas/Thread"
+
+
+    Ok: 
+      type: object 
+      properties:
+        message: 
+          type: string
+      example: 
+        message: "ok"
+        
+    BadRequest:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+      example:
+        code: 400
+        message: "Bad request"
+
+    NotFound:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+      example:
+        code: 404
+        message: "Not found"
+    Unauthorized:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+      example:
+        code: 401
+        message: "Unauthorized"
+    InternalServerError:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+      example:
+        code: 500
+        message: "Internal server error"
+
+  responses:
+    NotFound:
+      description: The specified resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/NotFound"
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/BadRequest"
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Unauthorized"
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/InternalServerError"
+    ok: 
+      description: operation ok 
+      content:
+        application/json: 
+          schema:
+            $ref: '#/components/schemas/Ok'
