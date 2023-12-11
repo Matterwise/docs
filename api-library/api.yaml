@@ -168,39 +168,6 @@ paths:
               schema:
                 type: object
                 properties:
-                  users:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/User"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-        "404":
-          $ref: "#/components/responses/NotFound"
-  /channels/{channel_id}/messages:
-    get:
-      tags:
-        - Channels
-      summary: Get messages within a channel with cursor-based pagination
-      parameters:
-        - name: channel_id
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: cursor
-          in: query
-          required: false
-          schema:
-            type: string
-            default: "0"
-      responses:
-        "200":
-          description: A list of messages
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
                   messages:
                     type: array
                     items:
