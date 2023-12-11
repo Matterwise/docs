@@ -29,6 +29,8 @@ tags:
     description: Operations about users
   - name: Channels
     description: Operations about channels
+  - name: Threads
+    description: Operations about threads
 
 paths:
   /channels:
@@ -183,6 +185,130 @@ paths:
           $ref: "#/components/responses/InternalServerError"
         "404":
           $ref: "#/components/responses/NotFound"
+
+  /threads:
+    get:
+      tags:
+        - Threads
+      summary: Get threads a user participated in within a workspace 
+      responses:
+        "200":
+          description: A list of threads
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ThreadList"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /threads/{thread_id}:
+    get:
+      tags:
+        - Threads
+      summary: Get a thread by ID
+      parameters:
+        - name: thread_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: A thread
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Thread"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    
+    delete:
+      tags:
+        - Threads
+      summary: Stop following a thread
+      parameters:
+        - name: thread_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Thread deleted
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /threads/{thread_id}/messages:
+    get:
+      tags:
+        - Threads
+      summary: Get messages within a thread with cursor-based pagination
+      parameters:
+        - name: thread_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            default: "0"
+      responses:
+        "200":
+          description: A list of messages
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  messages:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Message"
+                  links:
+                    type: object
+                    properties:
+                      self:
+                        type: string
+                        format: uri
+                      next_cursor:
+                        type: string
+                        format: uri
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /threads/{thread_id}/users:
+    get:
+      tags:
+        - Threads
+      summary: Get users of a thread
+      parameters:
+        - name: thread_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: A list of users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/User"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+        "404":
+          $ref: "#/components/responses/NotFound"    
 
 components:
   schemas:
