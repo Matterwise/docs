@@ -213,7 +213,7 @@ paths:
             application/json: 
               schema:
                 $ref: "#/components/schemas/Unauthorized"
-    post: 
+    put: 
       tags: 
         - Users
 
