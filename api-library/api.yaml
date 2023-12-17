@@ -140,7 +140,7 @@ paths:
                   users:
                     type: array
                     items:
-                      $ref: '#/components/schemas/UsersForUsers'
+                      $ref: '#/components/schemas/User'
         "500":
           $ref: "#/components/responses/InternalServerError"
         "404":
@@ -300,7 +300,7 @@ paths:
           content:
             application/json: 
               schema:
-                $ref: '#/components/schemas/UsersForUsers'
+                $ref: '#/components/schemas/User'
                 
         "404": 
           $ref: '#/components/responses/NotFound'
@@ -359,12 +359,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/UserAuth'
                 
-        
         "401": 
           $ref: '#/components/responses/Unauthorized'
           
-        "404": 
-          $ref: '#/components/responses/NotFound'
   /threads:
     get:
       tags:
@@ -572,37 +569,6 @@ components:
         username: "john_doe"
         email: "john.doe@example.com"
         password: "hashed_password_here"
-
-    UsersForUsers:
-      type: object 
-      properties:
-        id:
-          type: string
-          format: uuid
-        username:
-          type: string
-        email:
-          type: string
-          format: email
-        role_id:
-          type: string
-          format: uuid
-        bio:
-          type: string
-        avatar_url:
-          type: string
-          format: uri
-        status_message:
-          type: string
-        online_status:
-          type: string
-          enum:
-            - online
-            - away
-            - offline
-        created_at:
-          type: string
-          format: date
     Channel:
       type: object
       properties:
