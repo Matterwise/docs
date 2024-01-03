@@ -327,7 +327,7 @@ components:
         password:
           type: string
           format: password
-          readOnly: true
+          writeOnly: true
         role_id:
           type: string
           format: uuid
@@ -389,6 +389,7 @@ components:
             - shared
             - private
             - direct
+          readOnly: false
         creator_id:
           type: string
           format: uuid
@@ -523,8 +524,10 @@ components:
           type: string
         file_size:
           type: integer
+          readOnly: true
         file_type:
           type: string
+          readOnly: true
         content:
           type: string
           format: binary
@@ -567,6 +570,7 @@ components:
         parent_message_id:
           type: string
           format: uuid
+          readOnly: true
         messages:
           type: array
           items:
