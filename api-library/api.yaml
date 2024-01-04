@@ -29,6 +29,8 @@ tags:
     description: Operations about users
   - name: Channels
     description: Operations about channels
+  - name: Auth
+    description: Auth-related operations.
   - name: Threads
     description: Operations about threads
 
@@ -138,7 +140,7 @@ paths:
                   users:
                     type: array
                     items:
-                      $ref: "#/components/schemas/User"
+                      $ref: '#/components/schemas/User'
         "500":
           $ref: "#/components/responses/InternalServerError"
         "404":
@@ -186,6 +188,180 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
+  /users/me: 
+    get:
+      tags: 
+      - Users
+      # parameters: 
+      #   - name: auth
+      #     in: header
+      #     description: an authorization header
+      #     required: true
+      #     schema:
+      #       type: string
+      summary: Get logged user's info 
+      responses: 
+        "200": 
+          description: user's info 
+          content:
+            application/json: 
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: authentication error
+          content:
+            application/json: 
+              schema:
+                $ref: "#/components/schemas/Unauthorized"
+    put: 
+      tags: 
+        - Users
+
+      # parameters: 
+      #   - name: auth
+      #     in: header
+      #     description: an authorization header
+      #     required: true
+      #     schema:
+      #       type: string
+      
+      requestBody:
+        content:
+          application/json: 
+            schema:
+              $ref: '#/components/schemas/User'
+      summary: update user's data
+      responses:
+        "200": 
+          description: successful update 
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/User'
+        
+        "422": 
+          description: validation error
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/User'
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      tags: 
+        - Users
+      summary: delete's user data 
+      responses:
+        "200": 
+          $ref: '#/components/responses/ok'
+        "401": 
+          description: user is unidentified 
+          content: 
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/Unauthorized'
+  /user/verify/{code}: 
+    post:
+      tags: 
+        - Users
+        - Auth
+      summary: verifiying the code sent to the user's email 
+      parameters: 
+        - name: code
+          in: path 
+          description: the code in the email
+          required: true
+          schema:
+            type: string 
+            
+      responses:
+        "200": 
+          $ref: '#/components/responses/ok'
+        
+        "401": 
+          $ref: '#/components/responses/Unauthorized'
+  /user/{id}: 
+    get: 
+      tags: 
+        - Users
+        
+      summary: get user's info by id
+      parameters: 
+        - name: id
+          in: path 
+          description: user's id 
+          required: true
+          schema:
+            type: string 
+            
+      responses:
+        "200":
+          description: user's info
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/User'
+                
+        "404": 
+          $ref: '#/components/responses/NotFound'
+        
+        "401": 
+          $ref: '#/components/responses/Unauthorized'
+  /login: 
+    post: 
+      tags: 
+        - Users
+        - Auth
+      summary: user's login 
+      requestBody:
+        content:
+          application/json: 
+            schema:
+              $ref: '#/components/schemas/UserAuth'
+      
+      responses:
+        "200": 
+          $ref: '#/components/responses/ok'
+        
+        "422": 
+          description: user's loggin credentioals didn't pass the validation step 
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/UserAuth'
+                
+        
+        "401": 
+          $ref: '#/components/responses/Unauthorized'
+          
+        "404": 
+          $ref: '#/components/responses/NotFound'
+  /signup: 
+    post: 
+      tags: 
+        - Users
+        - Auth
+      summary: user's signup 
+      requestBody:
+        content:
+          application/json: 
+            schema:
+              $ref: '#/components/schemas/UserAuth'
+      
+      responses:
+        "200": 
+          $ref: '#/components/responses/ok'
+        
+        "422": 
+          description: user's loggin credentioals didn't pass the validation step 
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/UserAuth'
+                
+        "401": 
+          $ref: '#/components/responses/Unauthorized'
+          
   /threads:
     get:
       tags:
@@ -370,8 +546,29 @@ components:
         status_message: "Available for chat"
         online_status: "online"
         created_at: "2023-01-01"
-        updated_at: "2023-01-02"
-
+        updated_at: "2023-01-02"    
+    UserAuth: 
+      type: object 
+      properties:
+        username: 
+          type: string 
+        email: 
+          type: string 
+          format: email 
+        
+        password: 
+          type: string 
+          format: password
+          
+      required: 
+        - username
+        - password
+        - email 
+        
+      example: 
+        username: "john_doe"
+        email: "john.doe@example.com"
+        password: "hashed_password_here"
     Channel:
       type: object
       properties:
@@ -617,7 +814,13 @@ components:
         thread_list:
           - $ref: "#/components/schemas/Thread"
           - $ref: "#/components/schemas/Thread"
-
+    Ok: 
+      type: object 
+      properties:
+        message: 
+          type: string
+      example: 
+        message: "ok"
     BadRequest:
       type: object
       properties:
@@ -685,3 +888,10 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/InternalServerError"
+    ok: 
+      description: operation ok 
+      content:
+        application/json: 
+          schema:
+            $ref: '#/components/schemas/Ok'
+
